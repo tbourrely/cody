@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 
-	"github.com/docker/docker/api/types"
+	"github.com/cody/internal/docker"
 	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 )
@@ -20,20 +20,9 @@ var stopCmd = &cobra.Command{
 		}
 		defer cli.Close()
 
-		containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+		err = docker.Stop(cli, ctx)
 		if err != nil {
 			panic(err)
-		}
-
-	container:
-		for _, container := range containers {
-			for _, name := range container.Names {
-				if name == "/cody" {
-					_ = cli.ContainerStop(ctx, container.ID, nil)
-					_ = cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{})
-					break container
-				}
-			}
 		}
 	},
 }
