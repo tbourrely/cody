@@ -15,6 +15,7 @@ import (
 	"github.com/docker/go-connections/nat"
 )
 
+// Build is used to build the image.
 func Build(cli *client.Client, ctx context.Context) (err error) {
 	dir, err := ioutil.TempDir("", "cody")
 	if err != nil {
@@ -67,6 +68,7 @@ func Build(cli *client.Client, ctx context.Context) (err error) {
 	return nil
 }
 
+// Run is used to start a container.
 func Run(cli *client.Client, ctx context.Context) (err error) {
 	resp, err := cli.ContainerCreate(
 		ctx,
@@ -100,6 +102,7 @@ func Run(cli *client.Client, ctx context.Context) (err error) {
 	return nil
 }
 
+// Stop is used to stop a container
 func Stop(cli *client.Client, ctx context.Context) (err error) {
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
