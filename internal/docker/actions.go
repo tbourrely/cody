@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -75,7 +76,13 @@ func Run(cli *client.Client, ctx context.Context) (err error) {
 	if err != nil {
 		return
 	}
+
 	target := filepath.Join("/home/workspace", filepath.Base(cwd))
+
+	name, err := containerName(target)
+	if err != nil {
+		return
+	}
 
 	resp, err := cli.ContainerCreate(
 		ctx,
@@ -104,7 +111,7 @@ func Run(cli *client.Client, ctx context.Context) (err error) {
 					Target: target,
 				},
 			},
-		}, nil, nil, "cody")
+		}, nil, nil, name)
 	if err != nil {
 		return
 	}
@@ -135,4 +142,13 @@ container:
 	}
 
 	return nil
+}
+
+func containerName(path string) (string, error) {
+	base := filepath.Base(path)
+	re, err := regexp.Compile(`[^\w]`)
+	if err != nil {
+		return "", err
+	}
+	return re.ReplaceAllString(base, "_"), nil
 }
