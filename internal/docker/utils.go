@@ -10,6 +10,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/go-connections/nat"
@@ -70,6 +71,12 @@ func Build(cli *client.Client, ctx context.Context) (err error) {
 
 // Run is used to start a container.
 func Run(cli *client.Client, ctx context.Context) (err error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	target := filepath.Join("/home/workspace", filepath.Base(cwd))
+
 	resp, err := cli.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -88,6 +95,13 @@ func Run(cli *client.Client, ctx context.Context) (err error) {
 						HostIP:   "0.0.0.0",
 						HostPort: "3000",
 					},
+				},
+			},
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeBind,
+					Source: cwd,
+					Target: target,
 				},
 			},
 		}, nil, nil, "cody")
