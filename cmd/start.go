@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"context"
+	"os"
 
+	internalconfig "github.com/cody/internal/configuration"
 	"github.com/cody/internal/docker"
 	"github.com/cody/internal/networking"
 	"github.com/docker/docker/client"
@@ -14,6 +16,22 @@ var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start a cody instance",
 	Run: func(cmd *cobra.Command, args []string) {
+		config, err := internalconfig.Load(os.DirFS("/"))
+		if err != nil {
+			panic(err)
+		}
+
+		var port int
+		if config.IsRangeValid() {
+			port, err = networking.FindRandomPortInRange(config.Ports.Start, config.Ports.End)
+		} else {
+			port, err = networking.FindRandomPort()
+		}
+
+		if err != nil {
+			panic(err)
+		}
+
 		ctx := context.Background()
 
 		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -27,12 +45,7 @@ var startCmd = &cobra.Command{
 			panic(err)
 		}
 
-		availablePort, err := networking.FindRandomPort()
-		if err != nil {
-			panic(err)
-		}
-
-		err = docker.Run(cli, ctx, availablePort)
+		err = docker.Run(cli, ctx, port)
 		if err != nil {
 			panic(err)
 		}

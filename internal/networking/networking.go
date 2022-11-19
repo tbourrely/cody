@@ -2,6 +2,7 @@ package networking
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
 )
 
@@ -23,4 +24,16 @@ func FindRandomPort() (port int, err error) {
 	}
 	defer l.Close()
 	return l.Addr().(*net.TCPAddr).Port, nil
+}
+
+func random(start int, end int) int {
+	return rand.Intn(end-start) + start
+}
+
+func FindRandomPortInRange(start int, end int) (port int, err error) {
+	port = random(start, end)
+	for IsPortAvailable(port) == false {
+		port = random(start, end)
+	}
+	return
 }

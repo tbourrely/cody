@@ -31,3 +31,9 @@ func TestFindRandomPort(t *testing.T) {
 	require.NoError(t, err)
 	require.NotZero(t, port)
 }
+
+func TestFindRandomPortInRange(t *testing.T) {
+	port, err := FindRandomPortInRange(1, 100)
+	require.NoError(t, err)
+	require.NotZero(t, port)
+}
