@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"regexp"
 
+	internaltypes "github.com/cody/internal/types"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -17,6 +19,8 @@ import (
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/go-connections/nat"
 )
+
+var imageName = "cody"
 
 // Build is used to build the image.
 func Build(cli *client.Client, ctx context.Context) (err error) {
@@ -55,7 +59,7 @@ func Build(cli *client.Client, ctx context.Context) (err error) {
 
 	opts := types.ImageBuildOptions{
 		Dockerfile: "Dockerfile",
-		Tags:       []string{"cody:latest"},
+		Tags:       []string{fmt.Sprintf("%s:latest", imageName)},
 		Remove:     true,
 	}
 	res, err := cli.ImageBuild(ctx, tar, opts)
@@ -139,6 +143,23 @@ func Stop(cli *client.Client, ctx context.Context, instance string) (deleted boo
 				return true, nil
 			}
 		}
+	}
+
+	return
+}
+
+func GetInstances(cli *client.Client, ctx context.Context) (instances []internaltypes.Instance) {
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		return
+	}
+
+	for _, container := range containers {
+		if container.Image != imageName {
+			continue
+		}
+
+		instances = append(instances, internaltypes.Instance{Name: container.Names[0][1:]})
 	}
 
 	return
