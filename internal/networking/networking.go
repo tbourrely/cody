@@ -31,8 +31,9 @@ func random(start int, end int) int {
 }
 
 func FindRandomPortInRange(start int, end int) (port int, err error) {
+	// TODO : avoid infinite loop
 	port = random(start, end)
-	for IsPortAvailable(port) == false {
+	for !IsPortAvailable(port) {
 		port = random(start, end)
 	}
 	return
