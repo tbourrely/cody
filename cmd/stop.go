@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cody/internal/docker"
 	"github.com/docker/docker/client"
@@ -10,8 +11,9 @@ import (
 
 // stopCmd represents the stop command
 var stopCmd = &cobra.Command{
-	Use:   "stop",
+	Use:   "stop <instance name>",
 	Short: "Stop a cody instance",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -20,9 +22,15 @@ var stopCmd = &cobra.Command{
 		}
 		defer cli.Close()
 
-		err = docker.Stop(cli, ctx)
+		deleted, err := docker.Stop(cli, ctx, args[0])
 		if err != nil {
 			panic(err)
+		}
+
+		if !deleted {
+			fmt.Println("instance not found")
+		} else {
+			fmt.Println("instance removed")
 		}
 	},
 }

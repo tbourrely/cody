@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/fs"
 	"io/ioutil"
@@ -124,24 +125,23 @@ func Run(cli *client.Client, ctx context.Context) (err error) {
 }
 
 // Stop is used to stop a container
-func Stop(cli *client.Client, ctx context.Context) (err error) {
+func Stop(cli *client.Client, ctx context.Context, instance string) (deleted bool, err error) {
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
 		return
 	}
 
-container:
 	for _, container := range containers {
 		for _, name := range container.Names {
-			if name == "/cody" {
+			if name == fmt.Sprintf("/%s", instance) {
 				_ = cli.ContainerStop(ctx, container.ID, nil)
 				_ = cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{})
-				break container
+				return true, nil
 			}
 		}
 	}
 
-	return nil
+	return
 }
 
 func containerName(path string) (string, error) {
