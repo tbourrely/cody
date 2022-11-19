@@ -76,7 +76,7 @@ func Build(cli *client.Client, ctx context.Context) (err error) {
 }
 
 // Run is used to start a container.
-func Run(cli *client.Client, ctx context.Context) (err error) {
+func Run(cli *client.Client, ctx context.Context, port int) (err error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return
@@ -105,7 +105,7 @@ func Run(cli *client.Client, ctx context.Context) (err error) {
 				"3000/tcp": []nat.PortBinding{
 					{
 						HostIP:   "0.0.0.0",
-						HostPort: "3000",
+						HostPort: fmt.Sprint(port),
 					},
 				},
 			},

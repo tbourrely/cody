@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/cody/internal/docker"
+	"github.com/cody/internal/networking"
 	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +27,12 @@ var startCmd = &cobra.Command{
 			panic(err)
 		}
 
-		err = docker.Run(cli, ctx)
+		availablePort, err := networking.FindRandomPort()
+		if err != nil {
+			panic(err)
+		}
+
+		err = docker.Run(cli, ctx, availablePort)
 		if err != nil {
 			panic(err)
 		}
