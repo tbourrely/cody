@@ -2,6 +2,26 @@
 
 Manage vscode-in-browser instances.
 
+# Requirements
+
+* Docker
+
+# Usage
+
+```bash
+# start an instance, the used name will be the directory name
+cody start
+
+# stop an instance
+cody stop <instance name>
+
+# show instance url
+cody url <instance name>
+
+# list active instances
+cody list
+```
+
 # Configuration
 
 The tool will look for **cody.yml** files, under the home directory & current working directory.
