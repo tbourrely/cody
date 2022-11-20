@@ -15,3 +15,7 @@ ports:
     end: 10
 auth_token: "vscodeauthtoken" # pay attention to only use letters / numbers 
 ```
+
+# Dependencies
+
+This tool is based on [gitpod openvscode-server](https://github.com/gitpod-io/openvscode-server/) implementation.
