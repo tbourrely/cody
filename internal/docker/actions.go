@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	internaltypes "github.com/cody/internal/types"
 
@@ -130,19 +132,42 @@ func Run(cli *client.Client, ctx context.Context, port int) (err error) {
 
 // Stop is used to stop a container
 func Stop(cli *client.Client, ctx context.Context, instance string) (deleted bool, err error) {
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	container, err := findContainerByName(cli, ctx, instance)
 	if err != nil {
 		return
 	}
 
-	for _, container := range containers {
-		for _, name := range container.Names {
-			if name == fmt.Sprintf("/%s", instance) {
-				_ = cli.ContainerStop(ctx, container.ID, nil)
-				_ = cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{})
-				return true, nil
-			}
-		}
+	err = cli.ContainerStop(ctx, container.ID, nil)
+	if err != nil {
+		return
+	}
+
+	return true, nil
+}
+
+func Url(cli *client.Client, ctx context.Context, instance string) (url string, err error) {
+	container, err := findContainerByName(cli, ctx, instance)
+	if err != nil {
+		return
+	}
+
+	options := types.ContainerLogsOptions{ShowStdout: true}
+	var cLogs io.ReadCloser
+	var content []byte
+
+	cLogs, err = cli.ContainerLogs(ctx, container.ID, options)
+	if err != nil {
+		return
+	}
+
+	content, err = io.ReadAll(cLogs)
+	if err != nil {
+		return
+	}
+
+	url = replacePort(findUrl(string(content)), container)
+	if url == "" {
+		err = errors.New("could not determine instance URL")
 	}
 
 	return
@@ -165,6 +190,25 @@ func GetInstances(cli *client.Client, ctx context.Context) (instances []internal
 	return
 }
 
+func findContainerByName(cli *client.Client, ctx context.Context, name string) (types.Container, error) {
+	var result types.Container
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		return result, err
+	}
+
+	for _, container := range containers {
+		for _, containerName := range container.Names {
+			if containerName == fmt.Sprintf("/%s", name) {
+				return container, nil
+			}
+		}
+	}
+
+	return result, errors.New("container not found")
+}
+
 func containerName(path string) (string, error) {
 	base := filepath.Base(path)
 	re, err := regexp.Compile(`[^\w]`)
@@ -172,4 +216,15 @@ func containerName(path string) (string, error) {
 		return "", err
 	}
 	return re.ReplaceAllString(base, "_"), nil
+}
+
+func replacePort(url string, container types.Container) string {
+	bindings := container.Ports[0]
+	return strings.ReplaceAll(url, fmt.Sprint(bindings.PrivatePort), fmt.Sprint(bindings.PublicPort))
+}
+
+func findUrl(containerLogs string) string {
+	r, _ := regexp.Compile("http://(.*):(.*)/?tkn=(.*)")
+	result := r.FindString(containerLogs)
+	return result
 }
