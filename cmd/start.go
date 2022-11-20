@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	internalconfig "github.com/cody/internal/configuration"
-	"github.com/cody/internal/docker"
-	"github.com/cody/internal/networking"
+	internalconfig "github.com/tbourrely/cody/internal/configuration"
+	"github.com/tbourrely/cody/internal/docker"
+	"github.com/tbourrely/cody/internal/networking"
 	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 )

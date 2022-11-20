@@ -14,7 +14,7 @@ import (
 	"regexp"
 	"strings"
 
-	internaltypes "github.com/cody/internal/types"
+	internaltypes "github.com/tbourrely/cody/internal/types"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"

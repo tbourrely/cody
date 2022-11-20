@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cody/internal/types"
+	"github.com/tbourrely/cody/internal/types"
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v3"
 )

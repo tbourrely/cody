@@ -9,3 +9,9 @@ test_watch:
 
 test:
 	go test -v ./...
+
+compile:
+	./scripts/compile.sh github.com/tbourrely/cody
+
+clean_compile:
+	rm cody-*

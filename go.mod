@@ -1,4 +1,4 @@
-module github.com/cody
+module github.com/tbourrely/cody
 
 go 1.18
 
