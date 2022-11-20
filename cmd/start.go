@@ -30,6 +30,13 @@ var startCmd = &cobra.Command{
 			port, err = networking.FindRandomPort()
 		}
 
+		var authToken string
+		if config.AuthToken != "" {
+			authToken = config.AuthToken // TODO : validate token before using
+		} else {
+			authToken, err = docker.GenerateToken()
+		}
+
 		if err != nil {
 			panic(err)
 		}
@@ -52,7 +59,7 @@ var startCmd = &cobra.Command{
 			panic(err)
 		}
 
-		err = docker.Run(cli, ctx, instanceName, port)
+		err = docker.Run(cli, ctx, instanceName, port, authToken)
 		if err != nil {
 			panic(err)
 		}

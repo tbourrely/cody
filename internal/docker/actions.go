@@ -2,11 +2,13 @@ package docker
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"io/ioutil"
+	"math/big"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -78,7 +80,7 @@ func Build(cli *client.Client, ctx context.Context) (err error) {
 }
 
 // Run is used to start a container.
-func Run(cli *client.Client, ctx context.Context, name string, port int) (err error) {
+func Run(cli *client.Client, ctx context.Context, name string, port int, authToken string) (err error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return
@@ -90,7 +92,7 @@ func Run(cli *client.Client, ctx context.Context, name string, port int) (err er
 		ctx,
 		&container.Config{
 			Image: "cody",
-			Cmd:   []string{"3000", "mytoken"}, // TODO : variabilize
+			Cmd:   []string{"3000", authToken},
 			Tty:   false,
 			ExposedPorts: nat.PortSet{
 				"3000/tcp": struct{}{},
@@ -192,6 +194,21 @@ func GenerateName() (string, error) {
 	}
 
 	return safeContainerName(filepath.Base(cwd))
+}
+
+func GenerateToken() (string, error) {
+	n := 16
+	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
+	ret := make([]byte, n)
+	for i := 0; i < n; i++ {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			return "", err
+		}
+		ret[i] = letters[num.Int64()]
+	}
+
+	return string(ret), nil
 }
 
 func findContainerByName(cli *client.Client, ctx context.Context, name string) (types.Container, error) {

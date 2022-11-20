@@ -31,6 +31,7 @@ func TestLoad(t *testing.T) {
 ports:
   start: 10
   end: 30
+auth_token: 'test_token_value'
 `
 	var fs = afero.NewOsFs()
 
@@ -46,6 +47,7 @@ ports:
 	require.NoError(t, err)
 	assert.Equal(t, 10, config.Ports.Start)
 	assert.Equal(t, 30, config.Ports.End)
+	assert.Equal(t, "test_token_value", config.AuthToken)
 }
 
 func TestLoadHome(t *testing.T) {
