@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"time"
 
 	internalconfig "github.com/cody/internal/configuration"
 	"github.com/cody/internal/docker"
@@ -45,10 +47,31 @@ var startCmd = &cobra.Command{
 			panic(err)
 		}
 
-		err = docker.Run(cli, ctx, port)
+		instanceName, err := docker.GenerateName()
 		if err != nil {
 			panic(err)
 		}
+
+		err = docker.Run(cli, ctx, instanceName, port)
+		if err != nil {
+			panic(err)
+		}
+
+		var url string
+		for i := 1; i <= 10; i++ {
+			url, err = docker.Url(cli, ctx, instanceName)
+			time.Sleep(1 * time.Second)
+
+			if err == nil {
+				break
+			}
+		}
+
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println(url)
 	},
 }
 

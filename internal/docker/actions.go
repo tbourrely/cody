@@ -78,18 +78,13 @@ func Build(cli *client.Client, ctx context.Context) (err error) {
 }
 
 // Run is used to start a container.
-func Run(cli *client.Client, ctx context.Context, port int) (err error) {
+func Run(cli *client.Client, ctx context.Context, name string, port int) (err error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return
 	}
 
 	target := filepath.Join("/home/workspace", filepath.Base(cwd))
-
-	name, err := containerName(target)
-	if err != nil {
-		return
-	}
 
 	resp, err := cli.ContainerCreate(
 		ctx,
@@ -190,6 +185,15 @@ func GetInstances(cli *client.Client, ctx context.Context) (instances []internal
 	return
 }
 
+func GenerateName() (string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	return safeContainerName(filepath.Base(cwd))
+}
+
 func findContainerByName(cli *client.Client, ctx context.Context, name string) (types.Container, error) {
 	var result types.Container
 
@@ -209,13 +213,12 @@ func findContainerByName(cli *client.Client, ctx context.Context, name string) (
 	return result, errors.New("container not found")
 }
 
-func containerName(path string) (string, error) {
-	base := filepath.Base(path)
+func safeContainerName(name string) (string, error) {
 	re, err := regexp.Compile(`[^\w]`)
 	if err != nil {
 		return "", err
 	}
-	return re.ReplaceAllString(base, "_"), nil
+	return re.ReplaceAllString(name, "_"), nil
 }
 
 func replacePort(url string, container types.Container) string {

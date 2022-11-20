@@ -1,39 +1,38 @@
 package docker
 
 import (
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestGenerateName(t *testing.T) {
+func Test_safeContainerName(t *testing.T) {
 	testCases := []struct {
 		name     string
-		path     string
+		dirName  string
 		expected string
 	}{
 		{
 			name:     "simple",
-			path:     filepath.Join("home", "test", "directory"),
+			dirName:  "directory",
 			expected: "directory",
 		},
 		{
 			name:     "spaces",
-			path:     filepath.Join("home", "user", "firstname lastname"),
+			dirName:  "firstname lastname",
 			expected: "firstname_lastname",
 		},
 		{
 			name:     "symbols",
-			path:     filepath.Join("home", "test", "41\\name$("),
+			dirName:  "41\\name$(",
 			expected: "41_name__",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := containerName(tc.path)
+			got, err := safeContainerName(tc.dirName)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, got)
 		})
