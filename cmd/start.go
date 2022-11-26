@@ -6,17 +6,19 @@ import (
 	"os"
 	"time"
 
+	"github.com/docker/docker/client"
+	"github.com/spf13/cobra"
 	internalconfig "github.com/tbourrely/cody/internal/configuration"
 	"github.com/tbourrely/cody/internal/docker"
 	"github.com/tbourrely/cody/internal/networking"
-	"github.com/docker/docker/client"
-	"github.com/spf13/cobra"
 )
 
 // startCmd represents the start command
 var startCmd = &cobra.Command{
-	Use:   "start",
+	Use:   "start <instance name>",
 	Short: "Start a cody instance",
+	Long:  "Start a cody instance with the given name (default to folder name if not specified).",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		config, err := internalconfig.Load(os.DirFS("/"))
 		if err != nil {
@@ -54,9 +56,15 @@ var startCmd = &cobra.Command{
 			panic(err)
 		}
 
-		instanceName, err := docker.GenerateName()
-		if err != nil {
-			panic(err)
+		var instanceName string
+
+		if len(args) == 1 {
+			instanceName = args[0]
+		} else {
+			instanceName, err = docker.GenerateName()
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		err = docker.Run(cli, ctx, instanceName, port, authToken)
