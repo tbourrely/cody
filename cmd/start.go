@@ -67,11 +67,23 @@ var startCmd = &cobra.Command{
 			}
 		}
 
+		// Start container
 		err = docker.Run(cli, ctx, instanceName, port, authToken)
 		if err != nil {
 			panic(err)
 		}
 
+		// Install extensions
+		for _, extensionId := range config.Extensions {
+			err = docker.InstallExtension(cli, ctx, instanceName, extensionId)
+			if err != nil {
+				fmt.Println("Unable to install", extensionId)
+			} else {
+				fmt.Println("Installed extension", extensionId)
+			}
+		}
+
+		// Show instance URL
 		var url string
 		for i := 1; i <= 10; i++ {
 			url, err = docker.Url(cli, ctx, instanceName)

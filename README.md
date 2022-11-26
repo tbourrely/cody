@@ -34,6 +34,10 @@ ports:
     start: 1
     end: 10
 auth_token: "vscodeauthtoken" # pay attention to only use letters / numbers 
+extensions:
+  - vscodevim.vim
+  - redhat.ansible
+  - ...
 ```
 
 # Dependencies

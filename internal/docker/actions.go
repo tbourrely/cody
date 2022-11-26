@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"errors"
@@ -21,6 +22,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 )
 
@@ -209,6 +211,59 @@ func GenerateToken() (string, error) {
 	}
 
 	return string(ret), nil
+}
+
+func InstallExtension(cli *client.Client, ctx context.Context, instance string, extensionId string) error {
+	execConfig := types.ExecConfig{
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          []string{"/home/.openvscode-server/bin/openvscode-server", "--install-extension", extensionId},
+	}
+
+	cresp, err := cli.ContainerExecCreate(ctx, instance, execConfig)
+	if err != nil {
+		return err
+	}
+
+	// TODO : see if possible ot use events to detect exec end
+	// instead of waiting output for nothing
+	aresp, err := cli.ContainerExecAttach(ctx, cresp.ID, types.ExecStartCheck{})
+	if err != nil {
+		return err
+	}
+	defer aresp.Close()
+
+	// read the output
+	var outBuf, errBuf bytes.Buffer
+	outputDone := make(chan error)
+
+	go func() {
+		// StdCopy demultiplexes the stream into two buffers
+		_, err = stdcopy.StdCopy(&outBuf, &errBuf, aresp.Reader)
+		outputDone <- err
+	}()
+
+	select {
+	case err := <-outputDone:
+		if err != nil {
+			return err
+		}
+		break
+
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+
+	iresp, err := cli.ContainerExecInspect(ctx, cresp.ID)
+	if err != nil {
+		return err
+	}
+
+	if iresp.ExitCode != 0 {
+		return errors.New(fmt.Sprintf("Process failed with code %d", iresp.ExitCode))
+	}
+
+	return nil
 }
 
 func findContainerByName(cli *client.Client, ctx context.Context, name string) (types.Container, error) {
