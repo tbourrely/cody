@@ -8,9 +8,10 @@ type PortRange struct {
 }
 
 type Configuration struct {
-	Ports      PortRange
-	AuthToken  string `yaml:"auth_token"`
-	Extensions []string
+	Ports          PortRange
+	AuthToken      string `yaml:"auth_token"`
+	Extensions     []string
+	EditorSettings string `yaml:"editor_settings"`
 }
 
 func (c Configuration) IsRangeValid() bool {

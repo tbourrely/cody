@@ -34,10 +34,17 @@ ports:
     start: 1
     end: 10
 auth_token: "vscodeauthtoken" # pay attention to only use letters / numbers 
+# List of extensions
 extensions:
   - vscodevim.vim
   - redhat.ansible
   - ...
+# Editor settings, same as vscode settings.json
+editor_settings: |
+  {
+    "editor.fontSize": 16,
+    ...
+  }
 ```
 
 # Dependencies

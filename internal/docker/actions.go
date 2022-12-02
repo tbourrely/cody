@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	internaltypes "github.com/tbourrely/cody/internal/types"
 
@@ -264,6 +265,58 @@ func InstallExtension(cli *client.Client, ctx context.Context, instance string, 
 	}
 
 	return nil
+}
+
+func SetEditorSettings(cli *client.Client, ctx context.Context, container string, settings string) error {
+	dstPath := "/home/workspace/.openvscode-server/data/Machine/settings.json"
+	dstInfo := archive.CopyInfo{Path: dstPath, Exists: false, IsDir: false}
+
+	// Wait for 10 seconds for folder to be created
+	var pathExists bool
+	for i := 1; i <= 10; i++ {
+		time.Sleep(1 * time.Second)
+		_, err := cli.ContainerStatPath(ctx, container, filepath.Dir(dstPath))
+		// no error == path exists
+		if err == nil {
+			pathExists = true
+			break
+		}
+	}
+
+	if pathExists == false {
+		return errors.New("Settings path does not exists")
+	}
+
+	// Create tmp file with settings content
+	file, err := ioutil.TempFile("", "settings")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(file.Name())
+	file.Write([]byte(settings))
+
+	srcInfo, err := archive.CopyInfoSourcePath(file.Name(), true)
+	if err != nil {
+		return err
+	}
+
+	srcArchive, err := archive.TarResource(srcInfo)
+	if err != nil {
+		return err
+	}
+	defer srcArchive.Close()
+
+	dstDir, preparedArchive, err := archive.PrepareArchiveCopy(srcArchive, srcInfo, dstInfo)
+	if err != nil {
+		return err
+	}
+	defer preparedArchive.Close()
+
+	return cli.CopyToContainer(ctx,
+		container,
+		dstDir,
+		preparedArchive,
+		types.CopyToContainerOptions{})
 }
 
 func findContainerByName(cli *client.Client, ctx context.Context, name string) (types.Container, error) {
