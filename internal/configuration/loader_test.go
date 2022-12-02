@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/tbourrely/cody/internal/types"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tbourrely/cody/internal/types"
 )
 
 func TestGenerateFromYaml(t *testing.T) {
@@ -32,6 +32,10 @@ ports:
   start: 10
   end: 30
 auth_token: 'test_token_value'
+editor_settings: |
+  {
+    "editor.fontSize": 16
+  }
 `
 	var fs = afero.NewOsFs()
 
@@ -44,10 +48,16 @@ auth_token: 'test_token_value'
 
 	config, err := Load(os.DirFS("/"))
 
+	expectedSettings := `{
+  "editor.fontSize": 16
+}
+`
+
 	require.NoError(t, err)
 	assert.Equal(t, 10, config.Ports.Start)
 	assert.Equal(t, 30, config.Ports.End)
 	assert.Equal(t, "test_token_value", config.AuthToken)
+	assert.Equal(t, expectedSettings, config.EditorSettings)
 }
 
 func TestLoadHome(t *testing.T) {

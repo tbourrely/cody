@@ -83,6 +83,14 @@ var startCmd = &cobra.Command{
 			}
 		}
 
+		// Set custom settings
+		if config.EditorSettings != "" {
+			err = docker.SetEditorSettings(cli, ctx, instanceName, config.EditorSettings)
+			if err != nil {
+				panic(err)
+			}
+		}
+
 		// Show instance URL
 		var url string
 		for i := 1; i <= 10; i++ {
